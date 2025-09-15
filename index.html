@@ -46,32 +46,38 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Script cargado, buscando tarjetas...');
             const animalCards = document.querySelectorAll('.animal-card');
+            console.log('Tarjetas encontradas:', animalCards.length);
             
-            animalCards.forEach(card => {
-                let animationFrame;
-                let startTime;
-                let isAnimating = false;
-                let borderContainer;
+            animalCards.forEach((card, index) => {
+                console.log(`Configurando tarjeta ${index + 1}`);
                 
                 card.addEventListener('mouseenter', function() {
-                    if (isAnimating) return;
+                    console.log(`Mouse enter en tarjeta ${index + 1}`);
                     
-                    console.log('Mouse enter - iniciando animación con divs');
-                    startTime = Date.now();
-                    isAnimating = true;
+                    // Obtener la posición exacta de la tarjeta
+                    const rect = card.getBoundingClientRect();
+                    console.log('Posición de la tarjeta:', rect);
                     
-                    // Crear contenedor para los bordes
-                    borderContainer = document.createElement('div');
-                    borderContainer.style.position = 'absolute';
-                    borderContainer.style.top = '-10px';
-                    borderContainer.style.left = '-10px';
-                    borderContainer.style.right = '-10px';
-                    borderContainer.style.bottom = '-10px';
-                    borderContainer.style.pointerEvents = 'none';
-                    borderContainer.style.zIndex = '10';
+                    // Crear el marco alrededor de la imagen
+                    const border = document.createElement('div');
+                    border.id = `border-${index}`;
+                    border.style.position = 'fixed';
+                    border.style.top = (rect.top - 10) + 'px';
+                    border.style.left = (rect.left - 10) + 'px';
+                    border.style.width = (rect.width + 20) + 'px';
+                    border.style.height = (rect.height + 20) + 'px';
+                    border.style.border = '10px solid #ffffff';
+                    border.style.borderRadius = '25px';
+                    border.style.zIndex = '9999';
+                    border.style.pointerEvents = 'none';
+                    border.style.boxSizing = 'border-box';
                     
-                    // Crear los 4 lados del marco
+                    document.body.appendChild(border);
+                    console.log('Marco creado en posición:', rect.top - 10, rect.left - 10);
+                    
+                    // Crear los 4 lados del marco que se dibujan gradualmente
                     const topBorder = document.createElement('div');
                     topBorder.style.position = 'absolute';
                     topBorder.style.top = '0';
@@ -79,7 +85,6 @@
                     topBorder.style.height = '10px';
                     topBorder.style.backgroundColor = '#ffffff';
                     topBorder.style.width = '0%';
-                    topBorder.style.transition = 'width 0s';
                     
                     const rightBorder = document.createElement('div');
                     rightBorder.style.position = 'absolute';
@@ -88,7 +93,6 @@
                     rightBorder.style.width = '10px';
                     rightBorder.style.backgroundColor = '#ffffff';
                     rightBorder.style.height = '0%';
-                    rightBorder.style.transition = 'height 0s';
                     
                     const bottomBorder = document.createElement('div');
                     bottomBorder.style.position = 'absolute';
@@ -97,7 +101,6 @@
                     bottomBorder.style.height = '10px';
                     bottomBorder.style.backgroundColor = '#ffffff';
                     bottomBorder.style.width = '0%';
-                    bottomBorder.style.transition = 'width 0s';
                     
                     const leftBorder = document.createElement('div');
                     leftBorder.style.position = 'absolute';
@@ -106,20 +109,18 @@
                     leftBorder.style.width = '10px';
                     leftBorder.style.backgroundColor = '#ffffff';
                     leftBorder.style.height = '0%';
-                    leftBorder.style.transition = 'height 0s';
                     
-                    borderContainer.appendChild(topBorder);
-                    borderContainer.appendChild(rightBorder);
-                    borderContainer.appendChild(bottomBorder);
-                    borderContainer.appendChild(leftBorder);
-                    card.appendChild(borderContainer);
+                    border.appendChild(topBorder);
+                    border.appendChild(rightBorder);
+                    border.appendChild(bottomBorder);
+                    border.appendChild(leftBorder);
                     
-                    // Función de animación
+                    // Animar el marco que se dibuja gradualmente
+                    let startTime = Date.now();
+                    
                     function animateBorder() {
                         const elapsed = Date.now() - startTime;
-                        const progress = Math.min(elapsed / 4000, 1); // 4 segundos
-                        
-                        console.log('Progress:', progress);
+                        const progress = Math.min(elapsed / 4000, 1);
                         
                         // Cambiar color gradualmente de blanco a verde
                         const colorProgress = Math.min(progress * 1.5, 1);
@@ -139,20 +140,17 @@
                             // Lado superior (0% - 25%)
                             const sideProgress = progress / 0.25;
                             topBorder.style.width = (sideProgress * 100) + '%';
-                            console.log('Lado superior:', sideProgress);
                         } else if (progress <= 0.5) {
                             // Lado derecho (25% - 50%)
                             topBorder.style.width = '100%';
                             const sideProgress = (progress - 0.25) / 0.25;
                             rightBorder.style.height = (sideProgress * 100) + '%';
-                            console.log('Lado derecho:', sideProgress);
                         } else if (progress <= 0.75) {
                             // Lado inferior (50% - 75%)
                             topBorder.style.width = '100%';
                             rightBorder.style.height = '100%';
                             const sideProgress = (progress - 0.5) / 0.25;
                             bottomBorder.style.width = (sideProgress * 100) + '%';
-                            console.log('Lado inferior:', sideProgress);
                         } else {
                             // Lado izquierdo (75% - 100%)
                             topBorder.style.width = '100%';
@@ -160,34 +158,24 @@
                             bottomBorder.style.width = '100%';
                             const sideProgress = (progress - 0.75) / 0.25;
                             leftBorder.style.height = (sideProgress * 100) + '%';
-                            console.log('Lado izquierdo:', sideProgress);
                         }
                         
                         if (progress < 1) {
-                            animationFrame = requestAnimationFrame(animateBorder);
-                        } else {
-                            console.log('Animación completada');
-                            isAnimating = false;
+                            requestAnimationFrame(animateBorder);
                         }
                     }
                     
-                    animationFrame = requestAnimationFrame(animateBorder);
+                    requestAnimationFrame(animateBorder);
                 });
                 
                 card.addEventListener('mouseleave', function() {
-                    console.log('Mouse leave - limpiando animación');
+                    console.log(`Mouse leave en tarjeta ${index + 1}`);
                     
-                    // Limpiar animación
-                    if (animationFrame) {
-                        cancelAnimationFrame(animationFrame);
+                    // Remover el marco
+                    const border = document.getElementById(`border-${index}`);
+                    if (border) {
+                        border.remove();
                     }
-                    
-                    // Remover contenedor de bordes
-                    if (borderContainer && borderContainer.parentNode) {
-                        borderContainer.remove();
-                    }
-                    
-                    isAnimating = false;
                 });
             });
         });
