@@ -53,8 +53,24 @@
             animalCards.forEach((card, index) => {
                 console.log(`Configurando tarjeta ${index + 1}`);
                 
+                let hideTimeout; // Variable para el timeout de ocultación
+                let animationFrame; // Variable para controlar la animación
+                let isAnimating = false; // Flag para saber si está animando
+                let currentProgress = 0; // Progreso actual de la animación
+                
                 card.addEventListener('mouseenter', function() {
-                    console.log(`Mouse enter en tarjeta ${index + 1}`);
+                    // Cancelar cualquier timeout pendiente
+                    if (hideTimeout) {
+                        clearTimeout(hideTimeout);
+                        hideTimeout = null;
+                    }
+                    
+                    // Si ya está animando, no hacer nada
+                    if (isAnimating) {
+                        return;
+                    }
+                    
+                    console.log(`Mouse enter en tarjeta ${index + 1} - progreso actual: ${currentProgress}`);
                     
                     // Obtener la posición exacta de la tarjeta
                     const rect = card.getBoundingClientRect();
@@ -73,8 +89,8 @@
                     border.style.background = 'conic-gradient(from 0deg, #ffffff 0deg, transparent 0deg)';
                     
                     // Crear máscara CSS para que solo se vea el borde
-                    const outerRadius = 25;
-                    const innerRadius = 15;
+                    const outerRadius = 35;  // Aumenté el radio exterior
+                    const innerRadius = 25;  // Aumenté el radio interior
                     const maskImage = `radial-gradient(circle at center, transparent ${innerRadius}px, black ${innerRadius}px, black ${outerRadius}px, transparent ${outerRadius}px)`;
                     
                     border.style.webkitMaskImage = maskImage;
@@ -82,12 +98,18 @@
                     
                     document.body.appendChild(border);
                     
-                    // Animar el conic-gradient
-                    let startTime = Date.now();
+                    // Calcular el tiempo inicial basado en el progreso actual
+                    let startTime = Date.now() - (currentProgress * 4000);
+                    isAnimating = true;
                     
                     function animateConicBorder() {
+                        if (!isAnimating) {
+                            return; // Pausar la animación
+                        }
+                        
                         const elapsed = Date.now() - startTime;
                         const progress = Math.min(elapsed / 4000, 1);
+                        currentProgress = progress;
                         
                         // Calcular el ángulo (0 a 360 grados)
                         const angle = progress * 360;
@@ -102,22 +124,40 @@
                         // Aplicar el conic-gradient
                         border.style.background = `conic-gradient(from 0deg, ${color} 0deg, ${color} ${angle}deg, transparent ${angle}deg)`;
                         
-                        if (progress < 1) {
-                            requestAnimationFrame(animateConicBorder);
+                        if (progress < 1 && isAnimating) {
+                            animationFrame = requestAnimationFrame(animateConicBorder);
+                        } else {
+                            isAnimating = false;
+                            console.log(`Animación completada para tarjeta ${index + 1}`);
                         }
                     }
                     
-                    requestAnimationFrame(animateConicBorder);
+                    animationFrame = requestAnimationFrame(animateConicBorder);
                 });
                 
                 card.addEventListener('mouseleave', function() {
-                    console.log(`Mouse leave en tarjeta ${index + 1}`);
+                    console.log(`Mouse leave en tarjeta ${index + 1} - pausando animación`);
                     
-                    // Remover el marco
-                    const border = document.getElementById(`border-${index}`);
-                    if (border) {
-                        border.remove();
+                    // Pausar la animación pero mantener el progreso actual
+                    isAnimating = false;
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                        animationFrame = null;
                     }
+                    
+                    // Crear timeout para remover el marco después de 2 segundos
+                    hideTimeout = setTimeout(function() {
+                        console.log(`Removiendo marco de tarjeta ${index + 1} después del delay`);
+                        
+                        // Remover el marco
+                        const border = document.getElementById(`border-${index}`);
+                        if (border) {
+                            border.remove();
+                        }
+                        
+                        hideTimeout = null;
+                        currentProgress = 0; // Resetear el progreso
+                    }, 2000); // 2 segundos de delay
                 });
             });
         });
