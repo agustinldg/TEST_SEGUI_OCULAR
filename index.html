@@ -43,5 +43,154 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const animalCards = document.querySelectorAll('.animal-card');
+            
+            animalCards.forEach(card => {
+                let animationFrame;
+                let startTime;
+                let isAnimating = false;
+                let borderContainer;
+                
+                card.addEventListener('mouseenter', function() {
+                    if (isAnimating) return;
+                    
+                    console.log('Mouse enter - iniciando animación con divs');
+                    startTime = Date.now();
+                    isAnimating = true;
+                    
+                    // Crear contenedor para los bordes
+                    borderContainer = document.createElement('div');
+                    borderContainer.style.position = 'absolute';
+                    borderContainer.style.top = '-10px';
+                    borderContainer.style.left = '-10px';
+                    borderContainer.style.right = '-10px';
+                    borderContainer.style.bottom = '-10px';
+                    borderContainer.style.pointerEvents = 'none';
+                    borderContainer.style.zIndex = '10';
+                    
+                    // Crear los 4 lados del marco
+                    const topBorder = document.createElement('div');
+                    topBorder.style.position = 'absolute';
+                    topBorder.style.top = '0';
+                    topBorder.style.left = '0';
+                    topBorder.style.height = '10px';
+                    topBorder.style.backgroundColor = '#ffffff';
+                    topBorder.style.width = '0%';
+                    topBorder.style.transition = 'width 0s';
+                    
+                    const rightBorder = document.createElement('div');
+                    rightBorder.style.position = 'absolute';
+                    rightBorder.style.top = '0';
+                    rightBorder.style.right = '0';
+                    rightBorder.style.width = '10px';
+                    rightBorder.style.backgroundColor = '#ffffff';
+                    rightBorder.style.height = '0%';
+                    rightBorder.style.transition = 'height 0s';
+                    
+                    const bottomBorder = document.createElement('div');
+                    bottomBorder.style.position = 'absolute';
+                    bottomBorder.style.bottom = '0';
+                    bottomBorder.style.left = '0';
+                    bottomBorder.style.height = '10px';
+                    bottomBorder.style.backgroundColor = '#ffffff';
+                    bottomBorder.style.width = '0%';
+                    bottomBorder.style.transition = 'width 0s';
+                    
+                    const leftBorder = document.createElement('div');
+                    leftBorder.style.position = 'absolute';
+                    leftBorder.style.top = '0';
+                    leftBorder.style.left = '0';
+                    leftBorder.style.width = '10px';
+                    leftBorder.style.backgroundColor = '#ffffff';
+                    leftBorder.style.height = '0%';
+                    leftBorder.style.transition = 'height 0s';
+                    
+                    borderContainer.appendChild(topBorder);
+                    borderContainer.appendChild(rightBorder);
+                    borderContainer.appendChild(bottomBorder);
+                    borderContainer.appendChild(leftBorder);
+                    card.appendChild(borderContainer);
+                    
+                    // Función de animación
+                    function animateBorder() {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / 4000, 1); // 4 segundos
+                        
+                        console.log('Progress:', progress);
+                        
+                        // Cambiar color gradualmente de blanco a verde
+                        const colorProgress = Math.min(progress * 1.5, 1);
+                        const red = Math.floor(255 * (1 - colorProgress));
+                        const green = Math.floor(76 + (179 - 76) * colorProgress);
+                        const blue = Math.floor(255 * (1 - colorProgress));
+                        const color = `rgb(${red}, ${green}, ${blue})`;
+                        
+                        // Aplicar colores
+                        topBorder.style.backgroundColor = color;
+                        rightBorder.style.backgroundColor = color;
+                        bottomBorder.style.backgroundColor = color;
+                        leftBorder.style.backgroundColor = color;
+                        
+                        // Animar cada lado según el progreso
+                        if (progress <= 0.25) {
+                            // Lado superior (0% - 25%)
+                            const sideProgress = progress / 0.25;
+                            topBorder.style.width = (sideProgress * 100) + '%';
+                            console.log('Lado superior:', sideProgress);
+                        } else if (progress <= 0.5) {
+                            // Lado derecho (25% - 50%)
+                            topBorder.style.width = '100%';
+                            const sideProgress = (progress - 0.25) / 0.25;
+                            rightBorder.style.height = (sideProgress * 100) + '%';
+                            console.log('Lado derecho:', sideProgress);
+                        } else if (progress <= 0.75) {
+                            // Lado inferior (50% - 75%)
+                            topBorder.style.width = '100%';
+                            rightBorder.style.height = '100%';
+                            const sideProgress = (progress - 0.5) / 0.25;
+                            bottomBorder.style.width = (sideProgress * 100) + '%';
+                            console.log('Lado inferior:', sideProgress);
+                        } else {
+                            // Lado izquierdo (75% - 100%)
+                            topBorder.style.width = '100%';
+                            rightBorder.style.height = '100%';
+                            bottomBorder.style.width = '100%';
+                            const sideProgress = (progress - 0.75) / 0.25;
+                            leftBorder.style.height = (sideProgress * 100) + '%';
+                            console.log('Lado izquierdo:', sideProgress);
+                        }
+                        
+                        if (progress < 1) {
+                            animationFrame = requestAnimationFrame(animateBorder);
+                        } else {
+                            console.log('Animación completada');
+                            isAnimating = false;
+                        }
+                    }
+                    
+                    animationFrame = requestAnimationFrame(animateBorder);
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    console.log('Mouse leave - limpiando animación');
+                    
+                    // Limpiar animación
+                    if (animationFrame) {
+                        cancelAnimationFrame(animationFrame);
+                    }
+                    
+                    // Remover contenedor de bordes
+                    if (borderContainer && borderContainer.parentNode) {
+                        borderContainer.remove();
+                    }
+                    
+                    isAnimating = false;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
