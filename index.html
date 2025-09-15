@@ -58,9 +58,8 @@
                     
                     // Obtener la posición exacta de la tarjeta
                     const rect = card.getBoundingClientRect();
-                    console.log('Posición de la tarjeta:', rect);
                     
-                    // Crear el marco alrededor de la imagen
+                    // Crear el marco con conic-gradient y mask
                     const border = document.createElement('div');
                     border.id = `border-${index}`;
                     border.style.position = 'fixed';
@@ -68,59 +67,30 @@
                     border.style.left = (rect.left - 10) + 'px';
                     border.style.width = (rect.width + 20) + 'px';
                     border.style.height = (rect.height + 20) + 'px';
-                    border.style.border = '10px solid #ffffff';
                     border.style.borderRadius = '25px';
                     border.style.zIndex = '9999';
                     border.style.pointerEvents = 'none';
-                    border.style.boxSizing = 'border-box';
+                    border.style.background = 'conic-gradient(from 0deg, #ffffff 0deg, transparent 0deg)';
+                    
+                    // Crear máscara CSS para que solo se vea el borde
+                    const outerRadius = 25;
+                    const innerRadius = 15;
+                    const maskImage = `radial-gradient(circle at center, transparent ${innerRadius}px, black ${innerRadius}px, black ${outerRadius}px, transparent ${outerRadius}px)`;
+                    
+                    border.style.webkitMaskImage = maskImage;
+                    border.style.maskImage = maskImage;
                     
                     document.body.appendChild(border);
-                    console.log('Marco creado en posición:', rect.top - 10, rect.left - 10);
                     
-                    // Crear los 4 lados del marco que se dibujan gradualmente
-                    const topBorder = document.createElement('div');
-                    topBorder.style.position = 'absolute';
-                    topBorder.style.top = '0';
-                    topBorder.style.left = '0';
-                    topBorder.style.height = '10px';
-                    topBorder.style.backgroundColor = '#ffffff';
-                    topBorder.style.width = '0%';
-                    
-                    const rightBorder = document.createElement('div');
-                    rightBorder.style.position = 'absolute';
-                    rightBorder.style.top = '0';
-                    rightBorder.style.right = '0';
-                    rightBorder.style.width = '10px';
-                    rightBorder.style.backgroundColor = '#ffffff';
-                    rightBorder.style.height = '0%';
-                    
-                    const bottomBorder = document.createElement('div');
-                    bottomBorder.style.position = 'absolute';
-                    bottomBorder.style.bottom = '0';
-                    bottomBorder.style.left = '0';
-                    bottomBorder.style.height = '10px';
-                    bottomBorder.style.backgroundColor = '#ffffff';
-                    bottomBorder.style.width = '0%';
-                    
-                    const leftBorder = document.createElement('div');
-                    leftBorder.style.position = 'absolute';
-                    leftBorder.style.top = '0';
-                    leftBorder.style.left = '0';
-                    leftBorder.style.width = '10px';
-                    leftBorder.style.backgroundColor = '#ffffff';
-                    leftBorder.style.height = '0%';
-                    
-                    border.appendChild(topBorder);
-                    border.appendChild(rightBorder);
-                    border.appendChild(bottomBorder);
-                    border.appendChild(leftBorder);
-                    
-                    // Animar el marco que se dibuja gradualmente
+                    // Animar el conic-gradient
                     let startTime = Date.now();
                     
-                    function animateBorder() {
+                    function animateConicBorder() {
                         const elapsed = Date.now() - startTime;
                         const progress = Math.min(elapsed / 4000, 1);
+                        
+                        // Calcular el ángulo (0 a 360 grados)
+                        const angle = progress * 360;
                         
                         // Cambiar color gradualmente de blanco a verde
                         const colorProgress = Math.min(progress * 1.5, 1);
@@ -129,43 +99,15 @@
                         const blue = Math.floor(255 * (1 - colorProgress));
                         const color = `rgb(${red}, ${green}, ${blue})`;
                         
-                        // Aplicar colores
-                        topBorder.style.backgroundColor = color;
-                        rightBorder.style.backgroundColor = color;
-                        bottomBorder.style.backgroundColor = color;
-                        leftBorder.style.backgroundColor = color;
-                        
-                        // Animar cada lado según el progreso
-                        if (progress <= 0.25) {
-                            // Lado superior (0% - 25%)
-                            const sideProgress = progress / 0.25;
-                            topBorder.style.width = (sideProgress * 100) + '%';
-                        } else if (progress <= 0.5) {
-                            // Lado derecho (25% - 50%)
-                            topBorder.style.width = '100%';
-                            const sideProgress = (progress - 0.25) / 0.25;
-                            rightBorder.style.height = (sideProgress * 100) + '%';
-                        } else if (progress <= 0.75) {
-                            // Lado inferior (50% - 75%)
-                            topBorder.style.width = '100%';
-                            rightBorder.style.height = '100%';
-                            const sideProgress = (progress - 0.5) / 0.25;
-                            bottomBorder.style.width = (sideProgress * 100) + '%';
-                        } else {
-                            // Lado izquierdo (75% - 100%)
-                            topBorder.style.width = '100%';
-                            rightBorder.style.height = '100%';
-                            bottomBorder.style.width = '100%';
-                            const sideProgress = (progress - 0.75) / 0.25;
-                            leftBorder.style.height = (sideProgress * 100) + '%';
-                        }
+                        // Aplicar el conic-gradient
+                        border.style.background = `conic-gradient(from 0deg, ${color} 0deg, ${color} ${angle}deg, transparent ${angle}deg)`;
                         
                         if (progress < 1) {
-                            requestAnimationFrame(animateBorder);
+                            requestAnimationFrame(animateConicBorder);
                         }
                     }
                     
-                    requestAnimationFrame(animateBorder);
+                    requestAnimationFrame(animateConicBorder);
                 });
                 
                 card.addEventListener('mouseleave', function() {
