@@ -71,13 +71,13 @@
                     completionCount: 0 // Contador de veces completada
                 };
                 
-                // Crear elemento corona - radio = 1/4 del ancho de la imagen
+                // Crear elemento corona - radio = 1/4 del lado más pequeño
                 const corona = document.createElement('div');
                 corona.id = `corona-${index}`;
                 corona.style.position = 'absolute';
                 corona.style.top = '50%';
                 corona.style.left = '50%';
-                corona.style.width = '50%'; // Radio = 1/4 del ancho, diámetro = 1/2 del ancho
+                corona.style.width = '50%'; // Radio = 1/4 del lado más grande, diámetro = 1/2
                 corona.style.height = '50%'; // Mantener forma circular
                 corona.style.transform = 'translate(-50%, -50%)';
                 corona.style.borderRadius = '50%';
@@ -107,6 +107,31 @@
                 card.appendChild(corona);
                 card.appendChild(frame);
                 
+                // Calcular tamaño de corona basado en el lado más pequeño
+                function updateCoronaSize() {
+                    const cardRect = card.getBoundingClientRect();
+                    const width = cardRect.width;
+                    const height = cardRect.height;
+                    const minSide = Math.min(width, height);
+                    const radius = minSide / 4; // 1/4 del lado más pequeño
+                    const diameter = radius * 2;
+                    
+                    // Calcular porcentajes basados en el lado más pequeño
+                    const widthPercent = (diameter / width) * 100;
+                    const heightPercent = (diameter / height) * 100;
+                    
+                    corona.style.width = `${widthPercent}%`;
+                    corona.style.height = `${heightPercent}%`;
+                    
+                    console.log(`Corona actualizada - Lado más pequeño: ${minSide}px, Radio: ${radius}px`);
+                }
+                
+                // Actualizar tamaño inicial
+                updateCoronaSize();
+                
+                // Actualizar tamaño en redimensionamiento
+                window.addEventListener('resize', updateCoronaSize);
+                
                 function startCoronaAnimation() {
                     const state = imageStates[index];
                     
@@ -122,6 +147,9 @@
                     }
                     
                     console.log(`Iniciando corona para imagen ${index + 1} - progreso: ${state.currentProgress}`);
+                    
+                    // Actualizar tamaño de corona antes de mostrar
+                    updateCoronaSize();
                     
                     // Calcular tiempo inicial basado en progreso actual
                     state.startTime = Date.now() - (state.currentProgress * 3000); // 3 segundos
