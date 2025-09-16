@@ -43,5 +43,181 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Script cargado, inicializando coronas circulares...');
+            const animalCards = document.querySelectorAll('.animal-card');
+            console.log('Tarjetas encontradas:', animalCards.length);
+            
+            // Estado independiente para cada imagen
+            const imageStates = {};
+            
+            // Colores para el marco cuando se completa
+            const frameColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+            let currentColorIndex = 0;
+            
+            animalCards.forEach((card, index) => {
+                console.log(`Configurando corona para imagen ${index + 1}`);
+                
+                // Inicializar estado para esta imagen
+                imageStates[index] = {
+                    isAnimating: false,
+                    currentProgress: 0,
+                    startTime: null,
+                    pauseTime: null,
+                    hideTimeout: null,
+                    animationFrame: null,
+                    completionCount: 0 // Contador de veces completada
+                };
+                
+                // Crear elemento corona
+                const corona = document.createElement('div');
+                corona.id = `corona-${index}`;
+                corona.style.position = 'absolute';
+                corona.style.top = '50%';
+                corona.style.left = '50%';
+                corona.style.width = '120%';
+                corona.style.height = '120%';
+                corona.style.transform = 'translate(-50%, -50%)';
+                corona.style.borderRadius = '50%';
+                corona.style.border = '8px solid transparent';
+                corona.style.pointerEvents = 'none';
+                corona.style.zIndex = '999';
+                corona.style.transition = 'border-color 0.3s ease';
+                
+                // Crear marco de completación
+                const frame = document.createElement('div');
+                frame.id = `frame-${index}`;
+                frame.style.position = 'absolute';
+                frame.style.top = '-5px';
+                frame.style.left = '-5px';
+                frame.style.width = 'calc(100% + 10px)';
+                frame.style.height = 'calc(100% + 10px)';
+                frame.style.borderRadius = '15px';
+                frame.style.border = '4px solid transparent';
+                frame.style.pointerEvents = 'none';
+                frame.style.zIndex = '998';
+                frame.style.opacity = '0';
+                frame.style.transition = 'opacity 0.3s ease';
+                
+                // Hacer la tarjeta relativa para posicionar elementos absolutos
+                card.style.position = 'relative';
+                card.appendChild(corona);
+                card.appendChild(frame);
+                
+                function startCoronaAnimation() {
+                    const state = imageStates[index];
+                    
+                    // Cancelar timeout pendiente
+                    if (state.hideTimeout) {
+                        clearTimeout(state.hideTimeout);
+                        state.hideTimeout = null;
+                    }
+                    
+                    // Si ya está animando, no hacer nada
+                    if (state.isAnimating) {
+                        return;
+                    }
+                    
+                    console.log(`Iniciando corona para imagen ${index + 1} - progreso: ${state.currentProgress}`);
+                    
+                    // Calcular tiempo inicial basado en progreso actual
+                    state.startTime = Date.now() - (state.currentProgress * 3000); // 3 segundos
+                    state.isAnimating = true;
+                    
+                    // Mostrar corona
+                    corona.style.opacity = '1';
+                    
+                    animateCorona();
+                }
+                
+                function animateCorona() {
+                    const state = imageStates[index];
+                    
+                    if (!state.isAnimating) {
+                        return;
+                    }
+                    
+                    const elapsed = Date.now() - state.startTime;
+                    const progress = Math.min(elapsed / 3000, 1); // 3 segundos
+                    state.currentProgress = progress;
+                    
+                    // Crear conic-gradient para simular corona circular
+                    const angle = progress * 360;
+                    const coronaColor = `conic-gradient(from 0deg, #ffffff 0deg, #ffffff ${angle}deg, transparent ${angle}deg)`;
+                    
+                    // Aplicar máscara circular para que solo se vea el borde
+                    corona.style.background = coronaColor;
+                    corona.style.webkitMaskImage = 'radial-gradient(circle, transparent 48%, black 48%, black 52%, transparent 52%)';
+                    corona.style.maskImage = 'radial-gradient(circle, transparent 48%, black 48%, black 52%, transparent 52%)';
+                    
+                    // Verificar si se completó
+                    if (progress >= 1) {
+                        state.isAnimating = false;
+                        state.currentProgress = 0; // Reset para próxima vez
+                        console.log(`Corona completada para imagen ${index + 1}`);
+                        
+                        // Disparar evento de completación
+                        triggerCompletionEvent(index);
+                    } else if (state.isAnimating) {
+                        state.animationFrame = requestAnimationFrame(animateCorona);
+                    }
+                }
+                
+                function triggerCompletionEvent(imageIndex) {
+                    const state = imageStates[imageIndex];
+                    state.completionCount++;
+                    
+                    console.log(`Evento de completación para imagen ${imageIndex + 1} (vez #${state.completionCount})`);
+                    
+                    // Mostrar marco
+                    const frame = document.getElementById(`frame-${imageIndex}`);
+                    frame.style.opacity = '1';
+                    
+                    // Cambiar color del marco
+                    const colorIndex = (state.completionCount - 1) % frameColors.length;
+                    frame.style.borderColor = frameColors[colorIndex];
+                    
+                    console.log(`Marco mostrado con color: ${frameColors[colorIndex]}`);
+                }
+                
+                function pauseCoronaAnimation() {
+                    const state = imageStates[index];
+                    console.log(`Pausando corona para imagen ${index + 1}`);
+                    
+                    state.isAnimating = false;
+                    if (state.animationFrame) {
+                        cancelAnimationFrame(state.animationFrame);
+                        state.animationFrame = null;
+                    }
+                    
+                    // Timeout para ocultar corona después de 2 segundos
+                    state.hideTimeout = setTimeout(() => {
+                        console.log(`Ocultando corona para imagen ${index + 1} después del timeout`);
+                        
+                        const corona = document.getElementById(`corona-${index}`);
+                        corona.style.opacity = '0';
+                        
+                        state.hideTimeout = null;
+                        // Mantener el progreso para reanudación
+                    }, 2000);
+                }
+                
+                // Event listeners
+                card.addEventListener('mouseenter', function() {
+                    console.log(`Mouse enter en imagen ${index + 1}`);
+                    startCoronaAnimation();
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    console.log(`Mouse leave en imagen ${index + 1}`);
+                    pauseCoronaAnimation();
+                });
+            });
+            
+            console.log('Sistema de coronas inicializado correctamente');
+        });
+    </script>
 </body>
 </html>
